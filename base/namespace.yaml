@@ -1,0 +1,10 @@
+# Dedicated namespace for blockchain-db PostgreSQL.
+# Isolates DB resources from application and blockchain node namespace.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: blockchain-db
+  labels:
+    app.kubernetes.io/name: blockchain-db
+    app.kubernetes.io/managed-by: kubectl

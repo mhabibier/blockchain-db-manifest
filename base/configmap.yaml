@@ -1,0 +1,13 @@
+# auth-postgres/configmap.yaml
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-postgres-config
+  namespace: auth-postgres
+  labels:
+    app.kubernetes.io/name: auth-postgres
+    app.kubernetes.io/component: config
+data:
+  PGDATA: "/var/lib/postgresql/data/pgdata"
+  POSTGRES_HOST_AUTH_METHOD: "scram-sha-256"
