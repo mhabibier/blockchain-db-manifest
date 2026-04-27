@@ -1,51 +1,105 @@
+# PostgreSQL StatefulSet for blockchain-service.
+
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: blockchain-db
-  namespace: blockchain-network
+  name: blockchain-postgres
+  namespace: blockchain-postgres
+  labels:
+    app.kubernetes.io/name:      blockchain-postgres
+    app.kubernetes.io/component: database
+    app.kubernetes.io/version:   "16"
 spec:
-  serviceName: blockchain-db-headless
+  serviceName: blockchain-postgres-headless
   replicas: 1
   selector:
     matchLabels:
-      app: blockchain-db
+      app: blockchain-postgres
   template:
     metadata:
       labels:
-        app: blockchain-db
+        app: blockchain-postgres
+        app.kubernetes.io/name:      blockchain-postgres
+        app.kubernetes.io/component: database
     spec:
       securityContext:
-        fsGroup: 999
+        runAsUser:    999
+        runAsGroup:   999
+        fsGroup:      999
+        runAsNonRoot: true
+      terminationGracePeriodSeconds: 60
       containers:
         - name: postgres
           image: postgres:16-alpine
-          envFrom:
-            - configMapRef:
-                name: blockchain-db-config
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5432
+              name: postgres
+              protocol: TCP
           env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: blockchain-db-secret
-                  key: POSTGRES_USER
+                  name: blockchain-postgres-secret
+                  key:  POSTGRES_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: blockchain-db-secret
+                  name: blockchain-postgres-secret
                   key: POSTGRES_PASSWORD
             - name: POSTGRES_DB
               valueFrom:
                 secretKeyRef:
-                  name: blockchain-db-secret
-                  key: POSTGRES_DB
+                  name: blockchain-postgres-secret
+                  key:  POSTGRES_DB
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $(POSTGRES_USER)
+                - -d
+                - $(POSTGRES_DB)
+            initialDelaySeconds: 30
+            periodSeconds:       10
+            timeoutSeconds:      5
+            failureThreshold:    5
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - $(POSTGRES_USER)
+                - -d
+                - $(POSTGRES_DB)
+            initialDelaySeconds: 10
+            periodSeconds:       5
+            timeoutSeconds:      3
+            failureThreshold:    3
+            successThreshold:    1
+          resources:
+            requests:
+              cpu:    "100m"
+              memory: "256Mi"
+            limits:
+              cpu:    "500m"
+              memory: "512Mi"
           volumeMounts:
-            - name: db-storage
+            - name: blockchain-postgres-data
               mountPath: /var/lib/postgresql/data
+
   volumeClaimTemplates:
     - metadata:
-        name: db-storage
+        name: blockchain-postgres-data
+        labels:
+          app.kubernetes.io/name:      blockchain-postgres
+          app.kubernetes.io/component: storage
       spec:
-        accessModes: ["ReadWriteOnce"]
+        accessModes: 
+          - ReadWriteOnce
         resources:
           requests:
-            storage: 20Gi # Kapasitas lebih besar untuk data blockchain
+            storage: 5Gi
+        storageClassName: "ceph-rbd-sc"

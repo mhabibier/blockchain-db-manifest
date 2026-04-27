@@ -1,26 +1,38 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: blockchain-db-headless
-  namespace: blockchain-network
+  name: blockchain-postgres-headless
+  namespace: blockchain-postgres
+  labels:
+    app.kubernetes.io/name: blockchain-postgres
+    app.kubernetes.io/component: database-headless
 spec:
+  type: ClusterIP
   clusterIP: None
   selector:
-    app: blockchain-db
+    app: blockchain-postgres
   ports:
-    - port: 5432
-      targetPort: 5432
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
 
 ---
+
 apiVersion: v1
 kind: Service
 metadata:
-  name: blockchain-db
-  namespace: blockchain-network
+  name: blockchain-postgres
+  namespace: blockchain-postgres
+  labels:
+    app.kubernetes.io/name: blockchain-postgres
+    app.kubernetes.io/component: database
 spec:
   type: ClusterIP
   selector:
-    app: blockchain-db
+    app: blockchain-postgres
   ports:
-    - port: 5432
-      targetPort: 5432
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP
