@@ -1,4 +1,4 @@
-# PostgreSQL configuration for blockchain-service.
+# PostgreSQL configuration for blockchain-service database.
 
 apiVersion: v1
 kind: ConfigMap

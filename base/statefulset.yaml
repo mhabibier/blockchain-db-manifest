@@ -1,4 +1,4 @@
-# PostgreSQL StatefulSet for blockchain-service.
+# PostgreSQL StatefulSet for blockchain-service database.
 
 apiVersion: apps/v1
 kind: StatefulSet
